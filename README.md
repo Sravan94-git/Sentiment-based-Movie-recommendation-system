@@ -55,21 +55,21 @@ CineSense is a full-stack AI movie recommendation system that analyzes the emoti
 
 ## 🛠 Tech Stack
 
-### **Frontend**
-- React 18 (Vite)
-- Tailwind CSS
-- Framer Motion
-- Lucide React (icons)
+### **Frontend (Client)**
+- React 18 (Vite) - Fast, modern UI library.
+- Tailwind CSS - For a bespoke, responsive "Cinematic" design.
+- Framer Motion - Smooth, high-performance animations.
+- Lucide React (icons) - Beautiful, consistent iconography.
 
-### **Backend**
-- FastAPI
-- Uvicorn
-- Joblib
-- TMDB API
+### **Backend (Server)**
+- FastAPI - High-performance, async Python framework.
+- Uvicorn - Lightning-fast ASGI server.
+- Joblib - For loading the serialized ML models (.pkl files) efficiently.
+- TMDB API - Used to fetch rich movie metadata (posters, ratings, backdrops) for recommendations.
 
 ### **Deployment**
-- Docker + Docker Compose
-- Nginx reverse proxy
+- Docker + Docker Compose - Containerization for consistent environments.
+- Nginx - Production-grade reverse proxy to handle routing between Frontend and Backend.
 
 ---
 
@@ -99,25 +99,25 @@ You can run the entire application locally with a single command.
 - Docker Desktop installed and running
 - Git installed
 
-1. Clone the Repository**
+1. **Clone the Repository**
 ```bash
 git clone https://github.com/YOUR_USERNAME/CineSense.git
 cd CineSense
 ```
-2. Run with Docker Compose
+2. **Run with Docker Compose**
 
 This command builds both the Frontend (React) and Backend (FastAPI) containers and links them together.
 
 ```bash
 docker-compose up --build
 ```
-3. Access the App
+3. **Access the App**
 
 Open your browser and go to: http://localhost:3000
 
 The Frontend will automatically communicate with the Backend via the internal Docker network.
 
-### **🔮 Future Improvements
+### **🔮 Future Improvements**
 
 User Accounts: Save favorite recommendations and review history.
 
@@ -125,7 +125,7 @@ Advanced filtering: Filter recommendations by streaming service (Netflix, Prime,
 
 Deep Learning: Experiment with LSTM or BERT models for potentially higher sentiment accuracy.
 
-### **📜 License
+### **📜 License**
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
