@@ -7,20 +7,20 @@ Sentiment-based-Movie-recommendation-system is a full-stack AI movie recommendat
 
 ## 🧠 Machine Learning Pipeline
 
-### **1.Data Collection**
+### **Data Collection**
 - Source: IMDB movie reviews
 - Method: Web scraping using BeautifulSoup
 - Dataset stored in `backend/train.csv`
 
-### **2.Preprocessing**
+### **Preprocessing**
 - Lowercasing, punctuation removal, regex cleanup
 - Stopword removal using NLTK
 
-### **3.Feature Engineering**
+### **Feature Engineering**
 - TF-IDF Vectorization → 5000 max features
 - SMOTE applied for balancing sentiment classes
 
-### **4.Model Training**
+### **Model Training**
 | Metric | Selected Model |
 |--------|---------------|
 | **Algorithm** | Linear SVC |
