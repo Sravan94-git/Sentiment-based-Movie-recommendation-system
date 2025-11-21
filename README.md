@@ -14,36 +14,24 @@ CineSense is a full-stack AI movie recommendation system that analyzes the emoti
 - Fetches posters, ratings, and metadata via TMDB API
 - Real-time request processing via FastAPI
 
-### Machine Learning Features
-- Custom sentiment classification trained on IMDB data
-- SMOTE balancing for 5-class sentiment labels
-- TF-IDF vectorization (max_features=5000)
-- Model → Linear SVC (best performance after comparison)
-
-### Technical Highlights
-- Fully containerized using Docker + Docker Compose
-- CI-ready monorepo structure
-- Reverse proxy routing with Nginx
-- High-performance async backend with Uvicorn
-
 ---
 
 ## 🧠 Machine Learning Pipeline
 
-### **1️⃣ Data Collection**
+### **1.Data Collection**
 - Source: IMDB movie reviews
 - Method: Web scraping using BeautifulSoup
 - Dataset stored in `backend/train.csv`
 
-### **2️⃣ Preprocessing**
+### **2.Preprocessing**
 - Lowercasing, punctuation removal, regex cleanup
 - Stopword removal using NLTK
 
-### **3️⃣ Feature Engineering**
+### **3.Feature Engineering**
 - TF-IDF Vectorization → 5000 max features
 - SMOTE applied for balancing sentiment classes
 
-### **4️⃣ Model Training**
+### **4.Model Training**
 | Metric | Selected Model |
 |--------|---------------|
 | **Algorithm** | Linear SVC |
@@ -99,19 +87,19 @@ You can run the entire application locally with a single command.
 - Docker Desktop installed and running
 - Git installed
 
-1. **Clone the Repository**
+### 1. **Clone the Repository**
 ```bash
 git clone https://github.com/YOUR_USERNAME/CineSense.git
 cd CineSense
 ```
-2. **Run with Docker Compose**
+### 2. **Run with Docker Compose**
 
 This command builds both the Frontend (React) and Backend (FastAPI) containers and links them together.
 
 ```bash
 docker-compose up --build
 ```
-3. **Access the App**
+### 3. **Access the App**
 
 Open your browser and go to: http://localhost:3000
 
