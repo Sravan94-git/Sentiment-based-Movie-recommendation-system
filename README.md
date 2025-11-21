@@ -1,8 +1,8 @@
-# 🎬 CineSense — AI Powered Movie Matchmaker
+# 🎬 Sentiment-based-Movie-recommendation-system
 
 > **"Tell us how a film made you feel, and we shall find your next masterpiece."**
 
-CineSense is a full-stack AI movie recommendation system that analyzes the emotional sentiment of your movie review and recommends films matching your mood—going beyond traditional genre-based recommendations.
+Sentiment-based-Movie-recommendation-system is a full-stack AI movie recommendation system that analyzes the emotional sentiment of your movie review and recommends films matching your mood—going beyond traditional genre-based recommendations.
 
 ---
 
