@@ -4,17 +4,6 @@
 
 Sentiment-based-Movie-recommendation-system is a full-stack AI movie recommendation system that analyzes the emotional sentiment of your movie review and recommends films matching your mood—going beyond traditional genre-based recommendations.
 
----
-
-## 🚀 Features
-
-### Core Functionality
-- Sentiment-based movie recommendations
-- Personalized mood-driven suggestions
-- Fetches posters, ratings, and metadata via TMDB API
-- Real-time request processing via FastAPI
-
----
 
 ## 🧠 Machine Learning Pipeline
 
