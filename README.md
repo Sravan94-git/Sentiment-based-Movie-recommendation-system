@@ -1,108 +1,193 @@
-# 🎬 Sentiment-based-Movie-recommendation-system
+# 🎬 CineSense – Sentiment-Based Movie Recommendation System
 
-> **"Tell us how a film made you feel, and we shall find your next masterpiece."**
+> **"Tell us how a movie made you feel, and we'll recommend your next favorite masterpiece."**
 
-Sentiment-based-Movie-recommendation-system is a full-stack AI movie recommendation system that analyzes the emotional sentiment of your movie review and recommends films matching your mood—going beyond traditional genre-based recommendations.
+**CineSense** is a full-stack AI-powered movie recommendation system that analyzes the sentiment of a user's movie review and recommends similar movies based on emotional context rather than traditional genre-based filtering. By combining Natural Language Processing, Machine Learning, and TMDB metadata, the platform delivers personalized and meaningful movie recommendations through a modern, responsive web application.
 
+---
 
-## 🧠 Machine Learning Pipeline
+# 🧠 Machine Learning Pipeline
 
-### **Data Collection**
-- Source: IMDB movie reviews
-- Method: Web scraping using BeautifulSoup
+### 📊 Data Collection
+- Source: IMDb Movie Reviews
+- Method: Web scraping using **BeautifulSoup**
 - Dataset stored in `backend/train.csv`
 
-### **Preprocessing**
-- Lowercasing, punctuation removal, regex cleanup
-- Stopword removal using NLTK
+### 🧹 Data Preprocessing
+- Text normalization
+- Lowercasing
+- Regex cleaning
+- Punctuation removal
+- Stopword removal using **NLTK**
 
-### **Feature Engineering**
-- TF-IDF Vectorization → 5000 max features
-- SMOTE applied for balancing sentiment classes
+### ⚙️ Feature Engineering
+- TF-IDF Vectorization (5,000 max features)
+- SMOTE for balancing sentiment classes
 
-### **Model Training**
+### 🤖 Model Training
+
 | Metric | Selected Model |
-|--------|---------------|
+|---------|---------------|
 | **Algorithm** | Linear SVC |
-| **Labels** | Negative → Positive (5-scale) |
 | **Library** | Scikit-learn |
-| **Reason** | High accuracy + fast inference |
+| **Sentiment Labels** | 5-Class Sentiment Classification |
+| **Accuracy** | ~85% |
+| **Reason** | High accuracy with fast prediction performance |
 
 ---
 
-## 🛠 Tech Stack
+# 🌐 Full-Stack Application
 
-### **Frontend (Client)**
-- React 18 (Vite) - Fast, modern UI library.
-- Tailwind CSS - For a bespoke, responsive "Cinematic" design.
-- Framer Motion - Smooth, high-performance animations.
-- Lucide React (icons) - Beautiful, consistent iconography.
+### Frontend (Client)
+- React 18 (Vite)
+- Tailwind CSS
+- Framer Motion
+- Lucide React Icons
+- Responsive UI/UX
+- Dynamic movie recommendation dashboard
 
-### **Backend (Server)**
-- FastAPI - High-performance, async Python framework.
-- Uvicorn - Lightning-fast ASGI server.
-- Joblib - For loading the serialized ML models (.pkl files) efficiently.
-- TMDB API - Used to fetch rich movie metadata (posters, ratings, backdrops) for recommendations.
+### Backend (Server)
+- FastAPI
+- Uvicorn
+- Joblib
+- RESTful APIs
+- TMDB API Integration
+- Sentiment Prediction Engine
 
-### **Deployment**
-- Docker + Docker Compose - Containerization for consistent environments.
-- Nginx - Production-grade reverse proxy to handle routing between Frontend and Backend.
+### Recommendation Engine
+- Sentiment-based movie recommendations
+- Real-time prediction
+- Dynamic TMDB movie information
+- Movie posters, ratings, genres, and descriptions
 
 ---
 
-## 📂 Project Structure
+# 🛠 Tech Stack
 
-```
+## Frontend
+- React 18 (Vite)
+- Tailwind CSS
+- Framer Motion
+- Axios
+- Lucide React
+
+## Backend
+- FastAPI
+- Python
+- Uvicorn
+- Joblib
+- BeautifulSoup
+
+## Machine Learning
+- Scikit-learn
+- Linear SVC
+- TF-IDF Vectorizer
+- NLTK
+- SMOTE
+- Pandas
+- NumPy
+
+## APIs
+- TMDB API
+
+## Deployment
+- Docker
+- Docker Compose
+- Nginx
+
+---
+
+# 📂 Project Structure
+
+```text
 CineSense/
 ├── backend/
-│ ├── app.py # API Endpoints
-│ ├── sentiment_model.pkl # Trained ML Model
-│ ├── vectorizer.pkl # TF-IDF Vectorizer
-│ ├── train.csv # Dataset
-│ └── Dockerfile
+│   ├── app.py
+│   ├── sentiment_model.pkl
+│   ├── vectorizer.pkl
+│   ├── train.csv
+│   ├── requirements.txt
+│   └── Dockerfile
+│
 ├── frontend/
-│ ├── src/ # UI Code
-│ ├── nginx.conf
-│ └── Dockerfile
+│   ├── src/
+│   ├── public/
+│   ├── nginx.conf
+│   └── Dockerfile
+│
 ├── docker-compose.yml
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
-## 🐳 Setup & Installation (Docker)
+---
 
-You can run the entire application locally with a single command.
+# 🚀 Features
 
-### **📌 Prerequisites**
-- Docker Desktop installed and running
-- Git installed
+- 🎭 AI-powered sentiment analysis
+- 🎬 Personalized movie recommendations
+- 🌐 TMDB API integration
+- ⚡ Real-time prediction
+- 🎨 Modern responsive UI
+- 🔍 Dynamic movie search
+- 📱 Mobile-friendly interface
+- 🐳 Dockerized deployment
 
-### 1. **Clone the Repository**
+---
+
+# 🐳 Setup & Installation
+
+You can run the complete application locally using Docker.
+
+### 📌 Prerequisites
+
+- Docker Desktop
+- Git
+
+### 1️⃣ Clone the Repository
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/CineSense.git
 cd CineSense
 ```
-### 2. **Run with Docker Compose**
 
-This command builds both the Frontend (React) and Backend (FastAPI) containers and links them together.
+### 2️⃣ Build & Run
 
 ```bash
 docker-compose up --build
 ```
-### 3. **Access the App**
 
-Open your browser and go to: http://localhost:3000
+### 3️⃣ Open the Application
 
-The Frontend will automatically communicate with the Backend via the internal Docker network.
+```
+http://localhost:3000
+```
 
-### **🔮 Future Improvements**
+The React frontend communicates automatically with the FastAPI backend through Docker's internal network.
 
-User Accounts: Save favorite recommendations and review history.
+---
 
-Advanced filtering: Filter recommendations by streaming service (Netflix, Prime, etc.).
+# 🔮 Future Improvements
 
-Deep Learning: Experiment with LSTM or BERT models for potentially higher sentiment accuracy.
+- User authentication & profiles
+- Favorite movies & watchlists
+- Review history
+- Streaming platform filters
+- Hybrid recommendation engine
+- Deep Learning (LSTM/BERT)
+- Personalized recommendation dashboard
+- Cloud deployment using Microsoft Azure
 
-### **📜 License**
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+# 📜 License
 
+This project is licensed under the **MIT License**.
+
+---
+
+# 👨‍💻 Author
+
+**Sunkara Sravan Kumar Reddy**
+
+AI Engineer | Full-Stack Developer | Machine Learning Enthusiast
