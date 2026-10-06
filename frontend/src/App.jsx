@@ -1,62 +1,137 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { 
-  Loader2, ArrowRight, Brain, TrendingUp, Moon, Sun, Ticket, Zap, Activity
+  Loader2, ArrowRight, Brain, TrendingUp, Zap, Info, Play, Ticket, Sparkles, ChevronRight, ChevronLeft
 } from "lucide-react";
 
 import { getAnalysisAndRecommendations, fetchSecureMovies } from "./api";
 import { MovieAutocomplete, MovieCarousel, SentimentIcon } from "./components/UIComponents";
-import { ThemeProvider, useTheme } from "./components/ThemeContext";
+import { ThemeProvider } from "./components/ThemeContext";
+import TrailerModal from "./components/TrailerModal";
+import MovieDetailsModal from "./components/MovieDetailsModal";
+import spidermanBg from "./assets/spiderman-bg.png";
 
-// --- Components ---
-
-const ThemeToggle = () => {
-  const { theme, toggleTheme } = useTheme();
-  return (
-    <button 
-      onClick={toggleTheme}
-      className="p-2 text-stone-500 hover:text-indigo-600 dark:text-stone-400 dark:hover:text-indigo-400 transition-colors"
-    >
-      {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-    </button>
-  );
-};
-
+// --- NAVBAR ---
 const Navbar = () => {
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if(el) {
-      window.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
-    }
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 dark:bg-stone-950/90 backdrop-blur-md border-b border-indigo-50 dark:border-stone-800 transition-colors duration-300">
-      <div className="container mx-auto px-4 md:px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => scrollToSection('hero')}>
-          <div className="bg-indigo-950 dark:bg-white p-1.5 rounded">
-            <Ticket className="h-5 w-5 text-white dark:text-indigo-950" />
-          </div>
-          <span className="text-xl font-bold text-stone-900 dark:text-white font-serif tracking-tight group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
-            CineSense.
-          </span>
+    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-md border-b border-[#222222]' : 'bg-transparent'}`}>
+      <div className="container mx-auto px-6 md:px-12 py-5 flex items-center justify-between">
+        <div onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-xl font-bold text-white tracking-tighter hover:text-stone-300 transition-colors cursor-pointer relative z-10">
+          CineSense
         </div>
-
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600 dark:text-stone-400">
-            <button onClick={() => scrollToSection('popular')} className="hover:text-indigo-700 dark:hover:text-white transition-colors font-sans uppercase tracking-widest text-xs">Trending</button>
-            <button onClick={() => scrollToSection('about')} className="hover:text-indigo-700 dark:hover:text-white transition-colors font-sans uppercase tracking-widest text-xs">About</button>
-          </div>
-          
-          <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 hidden md:block"></div>
-          <ThemeToggle />
+        
+        {/* Centered Navigation Links */}
+        <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+          <button onClick={() => scrollTo('recommend')} className="text-[10px] font-semibold text-stone-300 hover:text-white uppercase tracking-widest transition-colors">
+            Get Recommendations
+          </button>
+          <button onClick={() => scrollTo('discover')} className="text-[10px] font-semibold text-stone-300 hover:text-white uppercase tracking-widest transition-colors">
+            Discover
+          </button>
+          <button onClick={() => scrollTo('about')} className="text-[10px] font-semibold text-stone-300 hover:text-white uppercase tracking-widest transition-colors">
+            About the Model
+          </button>
         </div>
       </div>
     </nav>
   );
 };
 
-const Hero = ({ onAnalyze, isLoading }) => {
+// --- HOME COMPONENTS ---
+const HeroSlideshow = ({ movies, onWatchTrailer, onMoreInfo }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (!movies || movies.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % Math.min(movies.length, 5));
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [movies]);
+
+  if (!movies || movies.length === 0) return <div className="h-screen bg-[#050505] animate-pulse"></div>;
+
+  const movie = movies[currentIndex];
+
+  return (
+    <div className="relative w-full h-screen bg-[#050505] flex items-center overflow-hidden">
+      {/* Background Images */}
+      {movies.slice(0, 5).map((m, idx) => (
+        <div 
+          key={m.id} 
+          className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentIndex ? 'opacity-100 z-0' : 'opacity-0 z-[-1]'}`}
+        >
+          <img 
+            src={`https://image.tmdb.org/t/p/original${m.backdrop_path || m.poster_path}`} 
+            alt={m.title} 
+            className="w-full h-full object-cover scale-105"
+            style={{ transform: idx === currentIndex ? 'scale(1)' : 'scale(1.05)', transition: 'transform 6s ease-out' }}
+          />
+        </div>
+      ))}
+      
+      {/* Gradients */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+
+      {/* Content */}
+      <div className="container mx-auto px-6 md:px-12 relative z-10 pt-32 md:pt-40 mt-12 md:mt-16">
+        <div className="max-w-2xl transition-all duration-700 transform translate-y-0 opacity-100" key={movie.id}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-6 text-xs text-white uppercase tracking-widest font-medium">
+             Featured Selection
+          </div>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold text-white mb-6 tracking-tighter leading-[1.1]">
+            {movie.title}
+          </h1>
+          <p className="text-stone-300 text-base md:text-lg line-clamp-3 leading-relaxed mb-10 font-light max-w-xl">
+            {movie.overview}
+          </p>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => onWatchTrailer(movie.id, movie.title)}
+              className="flex items-center gap-2 px-7 py-3.5 bg-red-600 text-white font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-colors shadow-xl shadow-red-900/40"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              Watch Trailer
+            </button>
+            <button 
+              onClick={() => onMoreInfo(movie)}
+              className="flex items-center gap-2 px-7 py-3.5 bg-blue-950/40 backdrop-blur-md text-blue-100 border border-blue-500/30 font-semibold uppercase tracking-widest text-sm hover:bg-blue-900/50 transition-colors shadow-xl shadow-blue-900/20"
+            >
+              <Info className="w-4 h-4" />
+              Details
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Slide Indicators */}
+      <div className="absolute bottom-10 right-10 z-20 flex gap-2">
+        {movies.slice(0, 5).map((_, idx) => (
+          <button 
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`h-1 transition-all duration-300 ${idx === currentIndex ? 'w-8 bg-white' : 'w-4 bg-white/30 hover:bg-white/50'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- RECOMMENDER COMPONENTS ---
+const HeroAnalyzer = ({ onAnalyze, isLoading }) => {
   const [movie, setMovie] = useState("");
   const [review, setReview] = useState("");
 
@@ -67,72 +142,68 @@ const Hero = ({ onAnalyze, isLoading }) => {
   };
 
   return (
-    <section id="hero" className="relative pt-32 pb-20 min-h-[90vh] flex items-center justify-center transition-colors duration-300 bg-gradient-to-b from-indigo-50 to-white dark:from-slate-950 dark:to-stone-950 overflow-hidden">
-      
-      {/* Ambient Glow - Royal Indigo */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 dark:bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <section id="recommend" className="py-24 relative flex flex-col items-center justify-center bg-black border-t border-[#222222] overflow-hidden">
+      {/* Spider-Man Cinema Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <img 
+          src={spidermanBg} 
+          alt="Spider-Man in Cinema" 
+          className="w-full h-full object-cover object-center opacity-70 filter brightness-95 contrast-105" 
+        />
+        {/* Subtle cinematic gradient vignette to keep focus on form while making Spider-Man vibrant */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-[#050505]/80" />
+      </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Centered Text Section */}
+      <div className="container mx-auto px-4 relative z-10 w-full">
         <div className="text-center mb-10 space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-stone-900 border border-indigo-100 dark:border-slate-800 shadow-sm mb-2">
-            <Activity className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-widest font-sans">
-              AI Powered Curation
-            </span>
-          </div>
-          
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-stone-900 dark:text-white leading-[0.9] font-serif">
-            The Cinema <br/> 
-            <span className="italic font-light text-indigo-900/80 dark:text-indigo-200/80">Matchmaker</span>
-          </h1>
-          
-          <p className="text-xl text-stone-600 dark:text-stone-400 max-w-xl mx-auto font-serif italic pt-4">
-            "Tell us how a film made you feel, and we shall find your next masterpiece."
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tighter leading-tight drop-shadow-md">
+            Discover your next <br/> cinematic obsession.
+          </h2>
+          <p className="text-lg text-stone-300 font-light max-w-xl mx-auto mt-4 drop-shadow">
+            Describe a film that moved you, and our algorithm will perfectly align your emotional resonance with the global archive.
           </p>
         </div>
 
-        {/* Analysis Form - Centered Below */}
-        <div id="analyze" className="max-w-2xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-6 relative">
-            <div className="space-y-6 bg-white/70 dark:bg-slate-900/80 backdrop-blur-md p-8 rounded-3xl border border-indigo-100 dark:border-slate-700 shadow-xl shadow-indigo-900/5">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 font-sans flex items-center gap-2">
-                  <Ticket className="h-4 w-4 text-indigo-500" /> 01. The Film
+        <div className="max-w-2xl mx-auto">
+          <form onSubmit={handleSubmit} className="space-y-8 relative">
+            <div className="bg-[#0f0f0f]/85 backdrop-blur-xl p-8 md:p-10 rounded-2xl border border-white/10 shadow-2xl">
+              <div className="space-y-4">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">
+                  01. Reference Film
                 </label>
                 <MovieAutocomplete value={movie} onChange={setMovie} onSelect={setMovie} />
               </div>
               
-              <div className="h-px w-full bg-indigo-50 dark:bg-slate-700"></div>
+              <div className="h-px w-full bg-white/10 my-8"></div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 font-sans flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-indigo-500" /> 02. The Critique
+              <div className="space-y-4">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">
+                  02. Emotional Critique
                 </label>
                 <textarea
                   value={review}
                   onChange={(e) => setReview(e.target.value)}
-                  placeholder="Describe the acting, the atmosphere, the story..."
-                  rows={3}
-                  className="w-full px-0 py-4 bg-transparent border-none focus:ring-0 text-stone-900 dark:text-white placeholder-stone-400 text-lg font-serif focus:outline-none resize-none"
+                  placeholder="How did the cinematography, pacing, and story make you feel?"
+                  rows={4}
+                  className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-stone-500 text-lg md:text-xl font-light focus:outline-none resize-none p-0"
                 />
               </div>
             </div>
 
-            {/* Strong Action Button - Royal Indigo */}
             <button 
               type="submit"
               disabled={isLoading || !movie || !review}
-              className="w-full py-5 bg-indigo-900 dark:bg-indigo-600 text-white font-sans uppercase tracking-widest text-sm font-bold hover:bg-indigo-800 dark:hover:bg-indigo-500 transition-all disabled:opacity-50 flex items-center justify-center gap-4 rounded-xl shadow-lg shadow-indigo-900/20 hover:-translate-y-1"
+              className="w-full py-5 bg-red-600 text-white uppercase tracking-widest text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-3 rounded-xl shadow-xl shadow-red-900/40 border border-red-500/50"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Analyzing...</span>
+                  <span>Curating matches...</span>
                 </>
               ) : (
                 <>
-                  <span>Reveal Recommendations</span>
+                  <span>Reveal Matches</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -144,32 +215,44 @@ const Hero = ({ onAnalyze, isLoading }) => {
   );
 };
 
-const AnalysisResult = ({ data }) => {
+const AnalysisResult = ({ data, onWatchTrailer, onMoreInfo }) => {
   return (
-    <div className="py-20 px-4 bg-stone-100 dark:bg-stone-900 border-y border-stone-200 dark:border-stone-800">
+    <div id="results" className="py-24 px-4 bg-[#050505] border-t border-[#222222]">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <span className="text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 font-sans">The Verdict</span>
-          <h3 className="text-4xl md:text-5xl font-serif text-stone-900 dark:text-white mt-4 mb-2">
+        
+        <div className="mb-20 p-10 md:p-16 rounded-3xl bg-[#0f0f0f] border border-[#222222] flex flex-col items-center text-center max-w-4xl mx-auto">
+          <div className="text-stone-500 mb-6 uppercase tracking-widest text-xs font-semibold">
+            Analysis Complete
+          </div>
+          
+          <h3 className="text-4xl md:text-5xl font-bold text-white mb-10 tracking-tight">
             {data.reviewed_movie_title}
           </h3>
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-stone-200 dark:border-slate-700 shadow-sm rounded-full">
-              <SentimentIcon sentiment={data.sentiment} />
-              <span className="font-sans font-bold text-stone-900 dark:text-white uppercase text-xs tracking-wide">
+          
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex items-center gap-3 px-6 py-3 bg-[#0a0a0a] border border-blue-900/50 shadow-inner shadow-blue-900/20 rounded-full">
+              <SentimentIcon sentiment={data.sentiment} className="w-5 h-5" />
+              <span className="font-semibold text-blue-200 uppercase text-xs tracking-widest">
                 {data.sentiment}
               </span>
             </div>
-            {/* Confidence Badge - Gold for Prestige */}
-            <div className="px-4 py-2 bg-amber-500 text-white font-sans text-xs font-bold uppercase tracking-wide shadow-md rounded-full">
-              Confidence: {(data.confidence * 100).toFixed(0)}%
+            <div className="px-6 py-3 bg-red-950/40 border border-red-900/50 text-red-200 font-bold uppercase tracking-widest text-xs rounded-full shadow-inner shadow-red-900/20">
+              {Number(data.confidence * 100).toFixed(0)}% Match Confidence
             </div>
           </div>
         </div>
 
-        {/* Gap Reduced Here */}
-        <div className="pt-2 mt-8 border-t border-stone-200 dark:border-slate-800">
-          <MovieCarousel title="Curated Selections" movies={data.recommendations} isResult />
+        <div>
+          <MovieCarousel 
+            title="Curated Matches" 
+            movies={data.recommendations} 
+            isResult 
+            onSelectMovie={onMoreInfo}
+            onWatchTrailer={(title) => {
+              const m = data.recommendations.find(x => x.title === title);
+              if(m) onWatchTrailer(m.id, title);
+            }}
+          />
         </div>
       </div>
     </div>
@@ -177,83 +260,81 @@ const AnalysisResult = ({ data }) => {
 };
 
 const FeatureCard = ({ icon: Icon, title, desc }) => (
-  <div className="group relative p-8 rounded-3xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900 shadow-sm hover:shadow-xl transition-all duration-500">
-    <div className="w-14 h-14 rounded-2xl bg-stone-100 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:bg-indigo-900 dark:group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 text-stone-900 dark:text-white">
-      <Icon className="h-7 w-7" />
+  <div className="p-10 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-900/30 transition-colors shadow-2xl">
+    <div className="w-12 h-12 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-center mb-8 text-red-500 shadow-inner shadow-red-900/20">
+      <Icon className="h-5 w-5" />
     </div>
-    
-    <h3 className="text-2xl font-serif text-stone-900 dark:text-white mb-4">
-      {title}
-    </h3>
-    <p className="text-stone-600 dark:text-stone-400 font-serif leading-relaxed italic">
-      {desc}
-    </p>
+    <h3 className="text-xl font-bold text-white mb-4 tracking-tight">{title}</h3>
+    <p className="text-stone-400 font-light leading-relaxed">{desc}</p>
   </div>
 );
 
 const AboutSection = () => (
-  <section id="about" className="py-24 bg-white dark:bg-stone-950 relative">
-    <div className="container mx-auto px-4 md:px-6 relative z-10">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl font-serif font-bold text-stone-900 dark:text-white mb-4">How It Works</h2>
-        {/* Gold Divider */}
-        <div className="w-12 h-1 bg-amber-500 mx-auto rounded-full" />
+  <section id="about" className="py-32 bg-[#050505] border-t border-[#222222]">
+    <div className="container mx-auto px-6 max-w-6xl">
+      <div className="mb-16">
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">The Architecture</h2>
+        <p className="text-stone-400 font-light max-w-xl">A sophisticated pipeline translating human emotion into precise cinematic coordinates.</p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <FeatureCard 
           icon={Brain} 
-          title="The Analysis" 
-          desc="A Linear SVC model dissects your review into 5 distinct emotional classes using advanced NLP."
+          title="NLP Processing" 
+          desc="Your critique is processed through a finely tuned Linear SVC model, classifying sentiment into precise emotional quadrants."
         />
         <FeatureCard 
           icon={TrendingUp} 
-          title="The Matching" 
-          desc="We cross-reference your unique sentiment profile with the global TMDB archive to find fits."
+          title="Vector Mapping" 
+          desc="The emotional vector is cross-referenced in real-time against an extensive, dynamically updated global film repository."
         />
         <FeatureCard 
           icon={Zap} 
-          title="The Result" 
-          desc="A bespoke list of cinema tailored specifically to your current mood, delivered instantly."
+          title="Instant Curation" 
+          desc="A hyper-personalized, ranked collection is synthesized and delivered directly to you with zero latency."
         />
       </div>
     </div>
   </section>
 );
 
+// --- APP & ROUTING ---
 const Footer = () => (
-  <footer className="py-12 bg-stone-50 dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800">
-    <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+  <footer className="py-12 bg-[#050505] border-t border-[#222222]">
+    <div className="container mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
       <div className="flex items-center gap-2">
-         <div className="bg-indigo-950 dark:bg-white p-1 rounded-md">
-            <Ticket className="h-4 w-4 text-white dark:text-indigo-950" />
-          </div>
-        <span className="font-serif text-xl font-bold text-stone-900 dark:text-white">CineSense.</span>
+        <span className="font-bold text-lg text-white tracking-tighter">CineSense</span>
       </div>
-      <p className="text-xs font-sans text-stone-500 uppercase tracking-widest">
-        © 2024 CineSense / AI Movie Discovery
+      <p className="text-[10px] font-semibold text-stone-600 uppercase tracking-widest">
+        © 2024 CineSense
       </p>
     </div>
   </footer>
 );
 
-const Index = () => {
+const MainApp = () => {
+  const [movies, setMovies] = useState({ trending: [], tvShows: [], animated: [], popular: [] });
+  const [trailerData, setTrailerData] = useState({ isOpen: false, id: null, title: null });
+  const [infoData, setInfoData] = useState({ isOpen: false, movie: null });
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [apiResult, setApiResult] = useState(null);
   const [error, setError] = useState(null);
-  const [movies, setMovies] = useState({ trending: [], animated: [], popular: [] });
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [trending, animated, popular] = await Promise.all([
+        const [trending, tvShows, animated, popular] = await Promise.all([
           fetchSecureMovies('/tmdb/trending'),
+          fetchSecureMovies('/tmdb/tv/trending'),
           fetchSecureMovies('/tmdb/discover', { type: 'animated' }),
           fetchSecureMovies('/tmdb/discover', { type: 'popular' }),
         ]);
-        setMovies({ trending, animated, popular });
+        setMovies({ trending, tvShows, animated, popular });
       } catch (e) { 
         console.error("Error loading movies:", e); 
+      } finally {
+        setIsAppLoading(false);
       }
     };
     loadData();
@@ -263,7 +344,6 @@ const Index = () => {
     setIsAnalyzing(true);
     setError(null);
     setApiResult(null);
-    
     try {
       const res = await getAnalysisAndRecommendations(movie, review);
       setApiResult(res);
@@ -277,44 +357,106 @@ const Index = () => {
     }
   };
 
+  const onWatchTrailer = (id, title) => setTrailerData({ isOpen: true, id, title });
+  const onMoreInfo = (movie) => setInfoData({ isOpen: true, movie });
+
+  if (isAppLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white space-y-6">
+        <Loader2 className="w-12 h-12 animate-spin text-red-600" />
+        <div className="text-xl font-medium tracking-widest uppercase">Connecting to Backend...</div>
+        <div className="text-sm text-stone-500 font-light max-w-md text-center">Waking up the analysis engine. This may take a few seconds on first load.</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors duration-300">
+    <div className="bg-[#050505] text-white min-h-screen font-sans selection:bg-white selection:text-black">
       <Navbar />
-      <main>
-        <Hero onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
-        
-        <div id="results">
-          {error && (
-            <div className="container mx-auto px-4 py-8">
-              <div className="p-4 border border-red-200 bg-red-50 text-red-800 font-sans text-sm text-center uppercase tracking-wide rounded-xl">
-                Error: {error}
-              </div>
-            </div>
-          )}
-          {apiResult && <AnalysisResult data={apiResult} />}
+      
+      {/* 1. Movie Slideshow */}
+      <HeroSlideshow 
+        movies={movies.trending} 
+        onWatchTrailer={onWatchTrailer} 
+        onMoreInfo={onMoreInfo}
+      />
+
+      {/* 2. Recommender Box */}
+      <HeroAnalyzer onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
+      
+      {error && (
+        <div className="container mx-auto px-6 py-8">
+          <div className="p-4 border border-[#333333] bg-[#0f0f0f] text-stone-300 font-medium text-sm text-center uppercase tracking-widest rounded-xl">
+            {error}
+          </div>
         </div>
+      )}
+      
+      {apiResult && <AnalysisResult data={apiResult} onWatchTrailer={onWatchTrailer} onMoreInfo={onMoreInfo} />}
 
-        <section id="popular" className="py-20 container mx-auto px-4">
-          <MovieCarousel title="Trending Worldwide" movies={movies.trending} />
-          <MovieCarousel title="Critics Choice" movies={movies.popular} />
-          <MovieCarousel title="Animated Features" movies={movies.animated} />
-        </section>
+      {/* 3. Movie Listings */}
+      <section id="discover" className="relative z-20 container mx-auto px-4 md:px-8 space-y-16 py-20 border-t border-[#222222]">
+        <MovieCarousel 
+          title="Trending Now" 
+          movies={movies.trending} 
+          onSelectMovie={onMoreInfo}
+          onWatchTrailer={(title) => {
+            const m = movies.trending.find(x => x.title === title);
+            if(m) onWatchTrailer(m.id, title);
+          }}
+        />
+        <MovieCarousel 
+          title="Critically Acclaimed" 
+          movies={movies.popular} 
+          onSelectMovie={onMoreInfo}
+          onWatchTrailer={(title) => {
+             const m = movies.popular.find(x => x.title === title);
+             if(m) onWatchTrailer(m.id, title);
+          }}
+        />
+        <MovieCarousel 
+          title="Top TV Shows" 
+          movies={movies.tvShows} 
+          onSelectMovie={onMoreInfo}
+          onWatchTrailer={(title) => {
+             const m = movies.tvShows.find(x => x.title === title);
+             if(m) onWatchTrailer(m.id, title);
+          }}
+        />
+        <MovieCarousel 
+          title="Animated Masterpieces" 
+          movies={movies.animated} 
+          onSelectMovie={onMoreInfo}
+          onWatchTrailer={(title) => {
+             const m = movies.animated.find(x => x.title === title);
+             if(m) onWatchTrailer(m.id, title);
+          }}
+        />
+      </section>
 
-        <AboutSection />
-      </main>
+      {/* 4. How it works */}
+      <AboutSection />
+
       <Footer />
+
+      <TrailerModal 
+        isOpen={trailerData.isOpen}
+        movieId={trailerData.id}
+        movieTitle={trailerData.title}
+        onClose={() => setTrailerData({ isOpen: false, id: null, title: null })}
+      />
+      <MovieDetailsModal
+        isOpen={infoData.isOpen}
+        movie={infoData.movie}
+        onClose={() => setInfoData({ isOpen: false, movie: null })}
+      />
     </div>
   );
 };
 
-// Wrap in ThemeProvider
 const App = () => (
   <ThemeProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-      </Routes>
-    </BrowserRouter>
+    <MainApp />
   </ThemeProvider>
 );
 

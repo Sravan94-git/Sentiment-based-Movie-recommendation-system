@@ -9,6 +9,7 @@ import uvicorn
 from typing import List, Optional, Dict
 import os
 import math
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -35,9 +36,9 @@ app.add_middleware(
 try:
     model = joblib.load("sentiment_model.pkl")
     vectorizer = joblib.load("vectorizer.pkl")
-    print("✅ Model and vectorizer loaded successfully.")
+    print("[OK] Model and vectorizer loaded successfully.")
 except Exception as e:
-    print(f"❌ Error loading model assets: {e}")
+    print(f"[ERROR] Error loading model assets: {e}")
     model = None
     vectorizer = None
 
@@ -52,8 +53,10 @@ class MovieRecommendation(BaseModel):
     title: str
     overview: str
     poster_path: Optional[str] = None
+    backdrop_path: Optional[str] = None
     release_date: Optional[str] = None
     vote_average: float
+    media_type: Optional[str] = "movie"
 
 class SentimentResponse(BaseModel):
     sentiment: str
@@ -113,23 +116,26 @@ def tmdb_api_call(endpoint: str, params: Optional[dict] = None):
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"⚠️ TMDB API Error on {endpoint}: {e}")
+        print(f"[WARN] TMDB API Error on {endpoint}: {e}")
         return None
 
 def get_movie_metadata(movie_name: str):
     """
     Search for the movie by name to get its ID, Genres, and Language.
     """
-    data = tmdb_api_call("/search/movie", {"query": movie_name})
+    data = tmdb_api_call("/search/movie", {"query": movie_name, "include_adult": "false"})
     
     if data and "results" in data and len(data["results"]) > 0:
-        top_result = data["results"][0]
-        return {
-            "id": top_result.get("id"),
-            "genre_ids": top_result.get("genre_ids", []),
-            "original_language": top_result.get("original_language", "en"),
-            "title": top_result.get("title")
-        }
+        current_date = datetime.today().strftime('%Y-%m-%d')
+        valid_results = [m for m in data["results"] if m.get("release_date") and m.get("release_date") <= current_date]
+        if valid_results:
+            top_result = valid_results[0]
+            return {
+                "id": top_result.get("id"),
+                "genre_ids": top_result.get("genre_ids", []),
+                "original_language": top_result.get("original_language", "en"),
+                "title": top_result.get("title")
+            }
     return None
 
 def predict_sentiment(review_text: str):
@@ -151,20 +157,23 @@ def predict_sentiment(review_text: str):
 
     return sentiment_label, min(1.0, max(0.0, confidence))
 
-def format_recommendations(movies: List[dict]) -> List[MovieRecommendation]:
+def format_recommendations(movies: List[dict], default_media_type: str = "movie") -> List[MovieRecommendation]:
     """Formats raw TMDB data into clean Pydantic models."""
     if not movies:
         return []
     results = []
     for m in movies:
         poster = f"{TMDB_IMAGE_BASE_URL}{m['poster_path']}" if m.get("poster_path") else None
+        backdrop = m.get("backdrop_path")
         results.append(MovieRecommendation(
             id=m.get("id", 0),
-            title=m.get("title", "Unknown"),
+            title=m.get("title", m.get("name", "Unknown")),
             overview=m.get("overview", ""),
             poster_path=poster,
-            release_date=m.get("release_date", ""),
-            vote_average=m.get("vote_average", 0.0)
+            backdrop_path=backdrop,
+            release_date=m.get("release_date", m.get("first_air_date", "")),
+            vote_average=m.get("vote_average", 0.0),
+            media_type=m.get("media_type", default_media_type)
         ))
     return results
 
@@ -175,7 +184,7 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
     """
     # 1. GLOBAL FALLBACK: If no metadata, just show generic top rated
     if not metadata:
-        print("⚠️ Movie metadata not found, using generic fallback.")
+        print("[WARN] Movie metadata not found, using generic fallback.")
         if sentiment in ["Positive", "Somewhat Positive"]:
             return tmdb_api_call("/movie/top_rated", {"page": 1})["results"][:8]
         else:
@@ -191,7 +200,7 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
     # Adaptive Vote Count: Lower threshold for non-English movies to find regional hits
     vote_threshold = 1000 if lang == "en" else 50
 
-    print(f"🔎 Strategy: Sentiment={sentiment} | Genre IDs={genres} | Lang={lang} | MinVotes={vote_threshold}")
+    print(f"[SEARCH] Strategy: Sentiment={sentiment} | Genre IDs={genres} | Lang={lang} | MinVotes={vote_threshold}")
 
     try:
         # --- STRATEGY A: POSITIVE/NEUTRAL (More like this) ---
@@ -201,11 +210,11 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
             data = tmdb_api_call(endpoint, {"language": "en-US", "page": 1})
             
             if data and data.get("results"):
-                print("   -> ✅ Found direct TMDB recommendations.")
+                print("   -> [OK] Found direct TMDB recommendations.")
                 return data["results"][:8]
 
             # Attempt 2 (Fallback): TMDB 'Similar' endpoint
-            print("   -> ⚠️ Direct recommendations empty. Trying '/similar' endpoint...")
+            print("   -> [WARN] Direct recommendations empty. Trying '/similar' endpoint...")
             endpoint = f"/movie/{movie_id}/similar"
             data = tmdb_api_call(endpoint, {"language": "en-US", "page": 1})
             
@@ -213,7 +222,7 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
                 return data["results"][:8]
 
             # Attempt 3 (Final Fallback): Genre Discovery (Popular)
-            print("   -> ⚠️ 'Similar' empty. Falling back to Genre Discovery.")
+            print("   -> [WARN] 'Similar' empty. Falling back to Genre Discovery.")
             return tmdb_api_call("/discover/movie", {
                 "with_genres": genres,
                 "with_original_language": lang,
@@ -225,7 +234,7 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
         # --- STRATEGY B: NEGATIVE (Better versions of this) ---
         else:
             # Find Top Rated movies in the same Genre/Language
-            print("   -> 📉 Negative Sentiment. Finding Top Rated in same genre.")
+            print("   -> [DOWN] Negative Sentiment. Finding Top Rated in same genre.")
             return tmdb_api_call("/discover/movie", {
                 "with_genres": genres, 
                 "with_original_language": lang,
@@ -235,7 +244,7 @@ def get_context_aware_recommendations(sentiment: str, metadata: Optional[dict]) 
             }).get("results", [])[:8]
 
     except Exception as e:
-        print(f"❌ Error in recommendation logic: {e}")
+        print(f"[ERROR] Error in recommendation logic: {e}")
         # Safety net: return generic popular movies
         return tmdb_api_call("/movie/popular", {"page": 1}).get("results", [])[:8]
 
@@ -260,7 +269,7 @@ async def predict_locale(request: SentimentRequest):
         
         reviewed_title = metadata["title"] if metadata else request.movie_name
 
-        print(f"✅ Result: {reviewed_title} -> {sentiment}")
+        print(f"[OK] Result: {reviewed_title} -> {sentiment}")
 
         return SentimentResponse(
             sentiment=sentiment,
@@ -272,7 +281,7 @@ async def predict_locale(request: SentimentRequest):
         )
 
     except Exception as e:
-        print(f"❌ Server Error: {e}")
+        print(f"[ERROR] Server Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -293,8 +302,34 @@ async def get_discover(type: str = "popular"):
 @app.get("/tmdb/search", response_model=List[MovieRecommendation])
 async def search_proxy(query: str):
     if len(query) < 2: return []
-    data = tmdb_api_call("/search/movie", {"query": query})
-    return format_recommendations(data.get("results", [])[:8] if data else [])
+    data = tmdb_api_call("/search/movie", {"query": query, "include_adult": "false"})
+    if data and data.get("results"):
+        current_date = datetime.today().strftime('%Y-%m-%d')
+        valid_movies = [m for m in data["results"] if m.get("release_date") and m.get("release_date") <= current_date]
+        return format_recommendations(valid_movies[:8], "movie")
+    return []
+
+@app.get("/tmdb/tv/trending", response_model=List[MovieRecommendation])
+async def get_tv_trending():
+    data = tmdb_api_call("/trending/tv/week")
+    return format_recommendations(data.get("results", [])[:15] if data else [], "tv")
+
+@app.get("/tmdb/title/{media_type}/{title_id}/details")
+async def get_title_details(media_type: str, title_id: int):
+    # Validates media type
+    if media_type not in ["movie", "tv"]: return {}
+    data = tmdb_api_call(f"/{media_type}/{title_id}", {"append_to_response": "credits,watch/providers"})
+    return data if data else {}
+
+@app.get("/tmdb/movie/{movie_id}/videos")
+async def get_movie_videos(movie_id: int):
+    data = tmdb_api_call(f"/movie/{movie_id}/videos")
+    return data.get("results", []) if data else []
+
+@app.get("/tmdb/movie/{movie_id}/providers")
+async def get_movie_providers(movie_id: int):
+    data = tmdb_api_call(f"/movie/{movie_id}/watch/providers")
+    return data.get("results", {}) if data else {}
 
 @app.get("/")
 async def home():

@@ -1,4 +1,4 @@
-# 🎬 CineSense – Sentiment-Based Movie Recommendation System
+# CineSense – Sentiment-Based Movie Recommendation System
 
 > **"Tell us how a movie made you feel, and we'll recommend your next favorite masterpiece."**
 
@@ -36,7 +36,7 @@
 
 ---
 
-# 🌐 Full-Stack Application
+# Full-Stack Application
 
 ### Frontend (Client)
 - React 18 (Vite)
@@ -92,8 +92,6 @@
 
 ## Deployment
 - Docker
-- Docker Compose
-- Nginx
 
 ---
 
@@ -125,24 +123,41 @@ CineSense/
 # 🚀 Features
 
 - 🎭 AI-powered sentiment analysis
-- 🎬 Personalized movie recommendations
 - 🌐 TMDB API integration
 - ⚡ Real-time prediction
-- 🎨 Modern responsive UI
-- 🔍 Dynamic movie search
 - 📱 Mobile-friendly interface
 - 🐳 Dockerized deployment
 
 ---
 
-# 🐳 Setup & Installation
+# ⚙️ Setup & Installation
 
-You can run the complete application locally using Docker.
+CineSense can be run in two ways:
 
-### 📌 Prerequisites
+- 🐳 **Option 1: Using Docker** — Recommended
+- 💻 **Option 2: Manual Setup** — Run backend and frontend separately
 
-- Docker Desktop
+---
+
+## 📌 Prerequisites
+
+### 🐳 For Docker Setup
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
+
+### 💻 For Manual Setup
+
+- Git
+- Python 3.10+
+- Node.js 18+
+- npm
+- TMDB API Key
+
+---
+
+# 🐳 Option 1: Run Using Docker
+
 
 ### 1️⃣ Clone the Repository
 
@@ -151,33 +166,127 @@ git clone https://github.com/YOUR_USERNAME/CineSense.git
 cd CineSense
 ```
 
-### 2️⃣ Build & Run
+### 2️⃣ Build and Start the Application
 
 ```bash
 docker-compose up --build
 ```
 
+This starts both:
+
+- **Frontend** — React + Vite
+- **Backend** — FastAPI
+
 ### 3️⃣ Open the Application
 
-```
+Once the containers are running, open:
+
+```text
 http://localhost:3000
 ```
 
-The React frontend communicates automatically with the FastAPI backend through Docker's internal network.
+### 🛑 Stop the Application
+
+```bash
+docker-compose down
+```
 
 ---
 
-# 🔮 Future Improvements
+# 💻 Option 2: Manual Setup
 
-- User authentication & profiles
-- Favorite movies & watchlists
-- Review history
-- Streaming platform filters
-- Hybrid recommendation engine
-- Deep Learning (LSTM/BERT)
-- Personalized recommendation dashboard
-- Cloud deployment using Microsoft Azure
+If you don't want to use Docker, you can run the backend and frontend separately.
 
+## 🔹 Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/CineSense.git
+cd CineSense
+```
+
+---
+
+## 🔹 Step 2: Backend Setup
+
+Navigate to the backend directory:
+
+```bash
+cd backend
+```
+
+### Create a Python Virtual Environment
+
+**Windows:**
+
+```bash
+python -m venv .venv
+```
+
+### Activate the Virtual Environment
+
+```bash
+.venv\Scripts\activate
+```
+```powershell
+.venv\Scripts\Activate.ps1
+```
+```bash
+source .venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Configure Environment Variables
+
+Create a `.env` file inside the `backend` directory:
+
+```env
+TMDB_API_KEY=your_tmdb_api_key
+```
+
+### Start the Backend
+
+```bash
+python app.py
+```
+
+The FastAPI backend will run on:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## 🔹 Step 3: Frontend Setup
+
+Open a **new terminal** and navigate to the frontend directory:
+
+```bash
+cd CineSense/frontend
+```
+
+Install the dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The frontend will be available at:
+
+```text
+http://localhost:5173
+```
 ---
 
 # 📜 License
@@ -190,4 +299,4 @@ This project is licensed under the **MIT License**.
 
 **Sunkara Sravan Kumar Reddy**
 
-AI Engineer | Full-Stack Developer | Machine Learning Enthusiast
+Full-Stack Developer | AI Engineer 
